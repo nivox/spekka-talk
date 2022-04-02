@@ -5,10 +5,11 @@ services:
     image: "zookeeper:3.8"
     container_name: "spekka_zookeeper"
     networks:
-      - spekkatalk
-    volumes:
-      - zookeeper_data:/data
-      - zookeeper_logs:/datalogs
+       - spekkatalk
+       
+    # volumes:
+    #   - zookeeper_data:/data
+    #   - zookeeper_logs:/datalogs
 
 
   kafka:
@@ -21,14 +22,22 @@ services:
       - KAFKA_CREATE_TOPICS=readings:3:1,counters:3:1
     networks:
       - spekkatalk
-    volumes:
-      - kafka_data:/kafka
+
+    # volumes:
+    #   - kafka_data:/kafka
+
+  cassandra:
+    image: "cassandra:3.11"
+    container_name: "spekka_cassandra"
+    networks:
+      - spekkatalk
+
 
 networks:
   spekkatalk:
     external: true
 
-volumes:
-  zookeeper_data:
-  zookeeper_logs:
-  kafka_data:
+# volumes:
+#   zookeeper_data:
+#   zookeeper_logs:
+#   kafka_data:

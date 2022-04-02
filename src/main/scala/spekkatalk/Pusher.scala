@@ -133,12 +133,8 @@ object Pusher {
 
       val done = generateReadingSource(deploymentSpecMap)
         .map { reading =>
-          val ts = Instant.ofEpochMilli(reading.timestamp)
-          val tsString = ts
-            .atZone(ZoneOffset.UTC)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME)
           println(
-            s"${tsString} - ${reading.deploymentId}: entrance=${reading.entranceId} count=${reading.counter}"
+            s"${Utils.prettyPrintTimestamp(reading.timestamp)} - ${reading.deploymentId}: entrance=${reading.entranceId} count=${reading.counter}"
           )
           reading
         }

@@ -18,31 +18,44 @@ import akka.http.scaladsl.server.Route
 import scala.util.Success
 import scala.util.Failure
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import akka.kafka.ConsumerMessage
+import scala.concurrent.ExecutionContext
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
 
-trait AppSkeleton[M] {
+trait AppSkeleton[E, M] {
   val kafkaServer = Option(System.getenv("KAFKA_SERVER"))
     .getOrElse(throw new IllegalArgumentException("KAFKA_SERVER not specified"))
 
   val kafkaTopic = Option(System.getenv("KAFKA_INPUT_TOPIC"))
     .getOrElse("readings")
 
-  def processingFlow[Offset]
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+
+  val config: Config = ConfigFactory.load()
+
+  val consumerGroup: String
+
+  def init()(implicit system: ActorSystem): E
+
+  def processingFlow[Offset](env: E)
       : Flow[(EntranceCounterReading, Offset), Offset, M]
 
-  def route[M](materializedValue: M): Route
+  def route(env: E, materializedValue: M): Route
 
   def main(args: Array[String]): Unit = {
     try {
-      implicit val system = ActorSystem("app")
-      import scala.concurrent.ExecutionContext.Implicits.global
+      implicit val system = ActorSystem("app", config)
+
+      val env = init()
 
       val consumerSettings = ConsumerSettings[String, String](
         system,
         new StringDeserializer,
         new StringDeserializer
       ).withBootstrapServers(kafkaServer)
-        .withGroupId("app")
+        .withGroupId(consumerGroup)
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
       val committerSettings = CommitterSettings(system)
@@ -70,11 +83,26 @@ trait AppSkeleton[M] {
               Nil
           }
         }
-        .viaMat(processingFlow)(Keep.right)
+        .viaMat(processingFlow(env))(Keep.right)
+        .statefulMapConcat{ () =>
+          val offsetMap = scala.collection.mutable.Map[ConsumerMessage.GroupTopicPartition, Long]()
+
+          { 
+            offset => 
+              offsetMap.get(offset.partitionOffset.key) match {
+                case Some(lastOffset) if offset.partitionOffset.offset <= lastOffset => 
+                  throw new IllegalArgumentException(s"Unordered offset commit detected! Trying to commit offset ${offset.partitionOffset.offset} (previously committed ${lastOffset}) for ${offset.partitionOffset.key}")
+                case _ =>
+                  offsetMap += offset.partitionOffset.key -> offset.partitionOffset.offset
+              }
+              
+              List(offset)
+          }
+        }
         .toMat(Committer.sink(committerSettings))(Keep.both)
         .run()
 
-      val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route(appM))
+      val bindingFuture = Http().newServerAt("0.0.0.0", 8080).bind(route(env, appM))
       bindingFuture.onComplete {
         case Success(b) => 
           println(s"HTTP Server started on ${b.localAddress}")
