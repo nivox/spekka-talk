@@ -95,7 +95,7 @@ object App4SpekkaStatefulPersistence extends AppSkeleton[App4Env, NotUsed] {
       }
 
     val byEntranceFlow = Partition.treeBuilder[EntranceCounterReading, Offset]
-      .dynamicManual(_.deploymentId, Set.empty)
+      .dynamicAuto(_.deploymentId)
       .dynamicAuto(_.entranceId)
       .build { case entranceId :@: deploymentId :@: KNil => 
         env.byEntranceBuilder.flowWithExtendedContext(s"${deploymentId}:${entranceId}")

@@ -32,6 +32,7 @@ object App1PlainFlow extends AppSkeleton[NotUsed, NotUsed] {
         }
       }
       .mapMaterializedValue(_ => () => getCounter())
+      .async
   }
 
   override def processingFlow[Offset](env: NotUsed) = {

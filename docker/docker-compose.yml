@@ -1,4 +1,4 @@
-version: "3"
+version: "2.2"
 
 services:
   zookeeper:
@@ -6,6 +6,8 @@ services:
     container_name: "spekka_zookeeper"
     networks:
        - spekkatalk
+    environment:
+       - ZK_SERVER_HEAP=512
        
     # volumes:
     #   - zookeeper_data:/data
@@ -21,8 +23,10 @@ services:
       - KAFKA_ZOOKEEPER_CONNECT=spekka_zookeeper.spekkatalk:2181
       - KAFKA_ADVERTISED_HOST_NAME=spekka_kafka.spekkatalk
       - KAFKA_CREATE_TOPICS=readings:3:1,counters:3:1
+      - KAFKA_OPTS=-Xmx1500M
     networks:
       - spekkatalk
+    mem_limit: 1G
 
     # volumes:
     #   - kafka_data:/kafka
@@ -32,6 +36,7 @@ services:
     container_name: "spekka_cassandra"
     networks:
       - spekkatalk
+    mem_limit: 1G
 
 
 networks:

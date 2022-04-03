@@ -22,6 +22,9 @@ import akka.kafka.ConsumerMessage
 import scala.concurrent.ExecutionContext
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import akka.kafka.scaladsl.PartitionAssignmentHandler
+import org.apache.kafka.common.TopicPartition
+import akka.kafka.RestrictedConsumer
 
 
 trait AppSkeleton[E, M] {
@@ -58,10 +61,25 @@ trait AppSkeleton[E, M] {
         .withGroupId(consumerGroup)
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
+      val assignmentHandler = new PartitionAssignmentHandler {
+        override def onRevoke(revokedTps: Set[TopicPartition], consumer: RestrictedConsumer): Unit =
+          println(s"Kafka partition revoked: ${revokedTps.map(_.partition()).toList.sorted.mkString(", ")}")
+        override def onAssign(assignedTps: Set[TopicPartition], consumer: RestrictedConsumer): Unit =
+          println(s"Kafka partition assigned: ${assignedTps.map(_.partition()).toList.sorted.mkString(", ")}")
+        override def onLost(lostTps: Set[TopicPartition], consumer: RestrictedConsumer): Unit =
+          println(s"Kafka partition lost: ${lostTps.map(_.partition()).toList.sorted.mkString(", ")}")
+        override def onStop(currentTps: Set[TopicPartition], consumer: RestrictedConsumer): Unit = 
+        println(s"Kafka partition stop: ${currentTps.map(_.partition()).toList.sorted.mkString(", ")}")
+      }
+
       val committerSettings = CommitterSettings(system)
 
       val (appM, done) = Consumer
-        .committableSource(consumerSettings, Subscriptions.topics(Set(kafkaTopic)))
+        .committableSource(
+          consumerSettings, 
+          Subscriptions.topics(Set(kafkaTopic))
+            .withPartitionAssignmentHandler(assignmentHandler)
+        )
         .mapConcat { msg =>
           import io.circe._
 
@@ -90,11 +108,15 @@ trait AppSkeleton[E, M] {
           { 
             offset => 
               offsetMap.get(offset.partitionOffset.key) match {
+                case Some(lastOffset) if offset.partitionOffset.offset > lastOffset + 1 => 
+                  println(s"WARN Unordered offset commit detected (Kafka rebalance?)! Trying to commit offset ${offset.partitionOffset.offset} (previously committed ${lastOffset}) for ${offset.partitionOffset.key}")
+
                 case Some(lastOffset) if offset.partitionOffset.offset <= lastOffset => 
-                  throw new IllegalArgumentException(s"Unordered offset commit detected! Trying to commit offset ${offset.partitionOffset.offset} (previously committed ${lastOffset}) for ${offset.partitionOffset.key}")
+                  println(s"WARN Duplicated offset detected (Kafka rebalance?)! Trying to commit offset ${offset.partitionOffset.offset} (previously committed ${lastOffset}) for ${offset.partitionOffset.key}")
+
                 case _ =>
-                  offsetMap += offset.partitionOffset.key -> offset.partitionOffset.offset
               }
+              offsetMap += offset.partitionOffset.key -> offset.partitionOffset.offset
               
               List(offset)
           }

@@ -108,7 +108,7 @@ object App5SpekkaStatefulSharding extends AppSkeleton[App5Env, NotUsed] {
       }
 
     val byEntranceFlow = Partition.treeBuilder[EntranceCounterReading, Offset]
-      .dynamicManual(_.deploymentId, Set.empty)
+      .dynamicAuto(_.deploymentId)
       .dynamicAuto(_.entranceId)
       .build { case entranceId :@: deploymentId :@: KNil => 
         env.byEntranceBuilder.flowWithExtendedContext(s"${deploymentId}:${entranceId}")

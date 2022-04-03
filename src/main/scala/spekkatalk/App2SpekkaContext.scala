@@ -49,6 +49,7 @@ object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, App2
         }
       }
       .mapMaterializedValue(_ => () => getCounter())
+      .async
   }
 
   
