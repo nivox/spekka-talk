@@ -17,15 +17,7 @@ import scala.concurrent.Future
 import akka.http.scaladsl.model.StatusCodes
 import akka.actor.ActorSystem
 
-object App2Model {
-  sealed trait CombinedM
-  case class ByDeployment(m: DynamicControl[String,() => Long]) extends CombinedM
-  case class ByEntrance(m: DynamicControl[String,DynamicControl[Int,() => Long]]) extends CombinedM
-}
-
-object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, App2Model.CombinedM]] {
-  import App2Model._
-
+object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, CombinedMaterialization]] {
   val consumerGroup = "context"
 
   override def init()(implicit system: ActorSystem): NotUsed = NotUsed
@@ -61,14 +53,14 @@ object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, App2
       .dynamicAuto(_.deploymentId)
       .build { case deploymentId :@: KNil => 
         baseFlow(s"deployment ${deploymentId}")
-      }.mapMaterializedValue[CombinedM](ByDeployment(_))
+      }.mapMaterializedValue[CombinedMaterialization](CombinedMaterialization.ByDeployment(_))
 
     val byEntranceFlow = Partition.treeBuilder[EntranceCounterReading, Offset]
       .dynamicAuto(_.deploymentId)
       .dynamicAuto(_.entranceId)
       .build { case entranceId :@: deploymentId :@: KNil => 
         baseFlow(s"deployment $deploymentId entrance $entranceId")
-      }.mapMaterializedValue[CombinedM](ByEntrance)
+      }.mapMaterializedValue[CombinedMaterialization](CombinedMaterialization.ByEntrance(_))
 
     val combinedFlow = Partition.treeBuilder[EntranceCounterReading, Offset]
     .staticMulticast[String]( { case (_, keys) => keys }, Set("byDeployment", "byEntrance"))
@@ -84,19 +76,19 @@ object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, App2
     .map(_._2)
   }
 
-  override def route(env: NotUsed, materializedValue: StaticControl[String, CombinedM]): Route = {
+  override def route(env: NotUsed, materializedValue: StaticControl[String, CombinedMaterialization]): Route = {
       import akka.http.scaladsl.server.Directives._
 
       def getCounterForDeployment(d: String): Future[Option[Long]] = {
         (for {
-          dC <- materializedValue.atKeyNarrowed[ByDeployment]("byDeployment")
+          dC <- materializedValue.atKeyNarrowed[CombinedMaterialization.ByDeployment]("byDeployment")
           counterF <- dC.get.m.atKey(d)
         } yield counterF()).run
       }
 
       def getCounterForEntrance(d: String, e: Int): Future[Option[Long]] = {
         (for {
-          eC <- materializedValue.atKeyNarrowed[ByEntrance]("byEntrance")
+          eC <- materializedValue.atKeyNarrowed[CombinedMaterialization.ByEntrance]("byEntrance")
           entranceC <- eC.get.m.atKey(d)
           counterF <- entranceC.atKey(e)
         } yield counterF()).run
