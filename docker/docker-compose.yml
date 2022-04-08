@@ -15,8 +15,8 @@ services:
 
 
   kafka:
-    image: "nyadesu/kafka-docker" #ARM version of wurstmeister/kafka
-    #image: "wurstmeister/kafka:2.13-2.8.1"
+    #image: "nyadesu/kafka-docker" #ARM version of wurstmeister/kafka
+    image: "wurstmeister/kafka:2.13-2.8.1"
     container_name: "spekka_kafka"
     environment:
       - KAFKA_BROKER_ID=1
@@ -26,7 +26,7 @@ services:
       - KAFKA_OPTS=-Xmx1500M
     networks:
       - spekkatalk
-    mem_limit: 1G
+    mem_limit: 2G
 
     # volumes:
     #   - kafka_data:/kafka
@@ -36,7 +36,7 @@ services:
     container_name: "spekka_cassandra"
     networks:
       - spekkatalk
-    mem_limit: 1G
+    #mem_limit: 1G
 
 
 networks:

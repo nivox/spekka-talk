@@ -1,21 +1,22 @@
 package spekkatalk
 
 import akka.NotUsed
-import akka.stream.scaladsl.Flow
-import spekkatalk.EntranceCounterReading
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
-import spekka.context.FlowWithExtendedContext
-import java.util.concurrent.atomic.AtomicLong
 import akka.stream.javadsl.FlowWithContext
+import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.Keep
+import spekka.context.FlowWithExtendedContext
 import spekka.context.Partition
 import spekka.context.PartitionTree
 import spekka.context.PartitionTree.PartitionControl.DynamicControl
 import spekka.context.PartitionTree.PartitionControl.StaticControl
-import akka.stream.scaladsl.Keep
+import spekkatalk.EntranceCounterReading
+
+import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import akka.http.scaladsl.model.StatusCodes
-import akka.actor.ActorSystem
 
 object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, CombinedMaterialization]] {
   val consumerGroup = "context"

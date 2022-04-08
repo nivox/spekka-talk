@@ -5,8 +5,18 @@ ROOT_DIR=$(cd $(dirname $0)/../; pwd)
 KAFKA_SERVER=spekka_kafka.spekkatalk:9092
 KAFKA_OUTPUT_TOPIC=readings
 
-#DEPLOYMENTS=d1:1@0.5
-DEPLOYMENTS=d1:1@1,d2:2@1,d3:3@1,d4:4@1
+case $MODE in
+  "single")
+    DEPLOYMENTS=d1:1@1
+    ;;
+  "multi")
+    DEPLOYMENTS=d1:1@1,d2:2@2,d3:3@3
+    ;;
+  *)
+    echo "Invalid MODE: specify either single or multi"
+    exit 1
+    ;;
+esac
 
 docker run --rm --net spekkatalk -v $ROOT_DIR:/workspace \
   --name spekka_pusher \

@@ -3,7 +3,7 @@
 ROOT_DIR=$(cd $(dirname $0)/../; pwd)
 
 APP_NAME=$1
-: ${APP_NAME:=app-talk}
+: ${APP_NAME:=app}
 
 : ${APP_ID:=1}
 

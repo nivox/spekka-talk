@@ -7,27 +7,39 @@ _paginate: false
 footer: Andrea Zito
 
 ---
-# Building Streaming Microservices with Akka
+# Speck Flavored Streaming Micro-Services with Akka
+
+---
+<!-- _class: invert -->
+#### Who the heck are you?
+- ![w:64](images/avatar_scalalove.png) 
+- Andrea Zito
+- @nivox
+- Senior Software Engineer @ thinkin.io
+- [https://nivox.github.io](https://nivox.github.io)
+
+
+
 ---
 <!-- header: Introduction -->
 
-#### What is a streaming microservice?
+#### What is a Streaming Micro-Service?
 
 * reads data from a streaming source
 * performs some computation
 * expose API to interact with it
 * possibly generates some output...
-* ...read by other streaming microservices
+* ...read by other streaming micro-services
 
 ---
 #### Desired properties
 
 1. Resilient (recover failures)
 1. Scalable (adapt to the data amount)
-1. Correct (duh 🤦)
+1. Complete
 
 ---
-#### Correctness
+#### Completeness
 
 * Process all the data...
 * ... but not more than once
@@ -38,16 +50,16 @@ footer: Andrea Zito
 
 * Exactly once is a lie 🍰
 * At least once
-* Idempotency / input deduplication
+* Idempotency / input de-duplication
 * Effectively once
 
 ---
 #### Typical architecture 
-![bg fit right](synchronous.png)
+![bg fit right](images/StreamingMicroservices.png)
 
-* Durable message queue (Kafka)
-* Storage layer
-* API layer
+- Durable message queue (Kafka)
+- Storage layer
+- API layer
 
 ---
 <!--header: Scenario -->
@@ -69,23 +81,63 @@ footer: Andrea Zito
 ```
 
 ---
+<!--header: Scenario -->
+
+#### Use case scenario
+
+- Centralised people counter system
+- Each entrance has a dedicated sensor
+- Edge service collect sensor's data and push to cloud
+- Multiple deployment
+
+```json
+{ 
+    "timestamp": 1640995200000, 
+    "deploymentId": "Carnegie Hall", 
+    "entranceId": 0, 
+    "counter": 1
+}
+```
+
+---
+<!-- header: Implementation: Plain Akka Streams -->
+
+# Akka Streams
+
+* enables creation of (complex) computation pipelines
+* providing out of the box back-pressure
+
+---
+<!-- header: Implementation: Plain Akka Streams -->
+
+# Akka Streams
+
+![w:640](images/AkkaFlow.png)
+
+---
 <!-- header: Implementation: Plain Akka Streams -->
 
 # Let's get coding
 
 #### Plain Akka Streams
+
+
 ---
 <!-- header: Implementation: Plain Akka Streams -->
 
 # Considerations
 
-* Interacting (properly) with the stream is not easy...
-* ... impossible when using dynamic partitioning
-* Built-in partitioning does not guarantee at-least-once
+* Interacting (properly) with a flow is not easy...
+* ... almost impossible when using dynamic partitioning
+* Built-in partitioning does not guarantee at-least-once semantics
 * Common tasks often require a lot of non trivial code
-* No out of the box suuport for state persistence
+* No out of the box support for state persistence
 
-#### Can we do better?
+---
+<!-- header: Implementation: Plain Akka Streams -->
+
+### Can we do better?
+
 
 ---
 <!-- header: Implementation: Spekka Context -->
@@ -94,6 +146,13 @@ footer: Andrea Zito
 
 * Provides one-to-one context propagation...
 * ... while supporting advanced partitioning
+
+---
+<!-- header: Implementation: Spekka Context -->
+
+# Spekka Context
+
+![w:640](images/FlowContext.png)
 
 ---
 <!-- header: Implementation: Spekka Context -->
@@ -107,10 +166,13 @@ footer: Andrea Zito
 
 # Considerations
 
-* Interacting (properly) with the stream is still hard...
-* ... but possible also when partitioning
-* Stream order is guaranteed also when partitioning
+* Interacting (properly) with a flow is still hard...
+* ... but now supported even when partitioning
+* Stream order is guaranteed
 * Still no support for state persistence
+
+---
+<!-- header: Implementation: Spekka Context -->
 
 #### Can we do better?
 
@@ -119,9 +181,9 @@ footer: Andrea Zito
 
 # Spekka Stateful
 
-* Models stateful flows by:
-    * Logic: how they behave
-    * Backend: how they manage state
+* Separates the business logic concerns...
+* ... from the management of the state
+* providing first class flow interaction
 
 ---
 <!-- header: Implementation: Spekka Stateful -->
@@ -135,9 +197,12 @@ footer: Andrea Zito
 
 # Considerations
 
-* Stream interactions are now first class...
-* ... and much easier
-* Out of the box support for side effects
+* Interaction with stream state is now first class
+* Side-effects are now first class
+* State is still not persisted 🤦
+
+---
+<!-- header: Implementation: Spekka Stateful -->
 
 #### Can we do better?
 
@@ -148,8 +213,8 @@ footer: Andrea Zito
 
 * Spekka Stateful Backend based on Akka Persistence
 * Allows to persist state to:
-    * Event based: cassandra, sql
-    * Durable state: sql
+    * Event based: cassandra, sql, ...
+    * Durable state: sql, ...
 
 ---
 <!-- header: Implementation: Spekka Stateful Akka Persistence -->
@@ -164,6 +229,7 @@ footer: Andrea Zito
 # Considerations
 
 * Changing storage layer has never been so 🥱
+* Still not scalable
 
 #### Can we do better?
 
@@ -172,7 +238,7 @@ footer: Andrea Zito
 
 # Spekka Stateful Sharding
 
-* Extends stateful flows making them clustered
+* Extends stateful flows *sharding* them on a cluster
 * Based on Akka Cluster Sharding
 
 ---
@@ -195,19 +261,44 @@ footer: Andrea Zito
 #### Can we do better?
 
 ---
-<!-- header: "" -->
+<!-- header: Not today... what about the future? -->
 
-![](not_today.gif)
+![](images/not_today.gif)
 
 ---
+<!-- header: "" -->
 # Conclusion
 
-#### Spekka makes it easier to build
+Spekka help you building:
 
 * effectively once
 * stateful
 * sharded
 
-#### streaming microservices
+---
+# Conclusion
 
+Spekka helps you building:
 
+- effectively once
+- stateful
+- sharded
+
+### Streaming Micro-Services
+
+---
+##### Spekka micro-site: 
+[https://spekka.github.io](https://spekka.github.io)
+
+## Sponsors
+Developement of this library has been sponsored by
+![](images/thinkin.png)
+
+---
+
+### Feedback time
+
+- was the problem clear?
+- was the solution understandable by non Hakkers?
+- was the live-coding vs presentation balance good?
+- were you bored?

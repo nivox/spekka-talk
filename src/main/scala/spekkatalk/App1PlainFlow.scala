@@ -1,12 +1,13 @@
 package spekkatalk
 
 import akka.NotUsed
+import akka.actor.ActorSystem
+import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Flow
 import spekkatalk.EntranceCounterReading
-import akka.http.scaladsl.server.Route
+
 import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.ExecutionContext
-import akka.actor.ActorSystem
 
 object App1PlainFlow extends AppSkeleton[NotUsed, NotUsed] {
 

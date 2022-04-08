@@ -9,7 +9,7 @@ scalacOptions := Seq(
 resolvers += "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 
 val AkkaVersion = "2.6.19"
-val SpekkaVersion = "0.1.0-rc2+2-7595e364-SNAPSHOT"
+val SpekkaVersion = "0.1.0-rc2+4-a364f6b4-SNAPSHOT"
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
