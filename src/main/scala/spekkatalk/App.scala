@@ -50,7 +50,7 @@ object App extends AppSkeleton[AppEnv] {
 
   override def init()(implicit system: ActorSystem): AppEnv = AppEnv()
 
-  override def processingFlow[Offset](env: AppEnv): Flow[(EntranceCounterReading, Offset),Offset,NotUsed] = {
+  override def processingFlow[Offset](env: AppEnv): Flow[(EntranceCounterReading, Offset),Offset,M] = {
     Flow[(EntranceCounterReading, Offset)]
     .map { case (reading, offset) => 
       println(s"Received: $reading")
@@ -58,7 +58,7 @@ object App extends AppSkeleton[AppEnv] {
     }
   }
 
-  override def route(env: AppEnv, materializedValue: NotUsed): Route = {
+  override def route(env: AppEnv, materializedValue: M): Route = {
     import akka.http.scaladsl.server.Directives._
 
     reject
