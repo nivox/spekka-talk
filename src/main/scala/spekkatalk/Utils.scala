@@ -4,6 +4,8 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import io.circe.Decoder
+import shapeless.Lazy
+import io.circe.generic.codec.DerivedAsObjectCodec
 
 object Utils {
   def prettyPrintTimestamp(timestamp: Long): String = {
@@ -31,5 +33,13 @@ object Utils {
     }
 
     spekka.codec.Codec(encoder, decoder)
+  }
+
+  def deriveJsonSpekkaCodec[T](implicit codec: Lazy[DerivedAsObjectCodec[T]]): spekka.codec.Codec[T] = {
+    import io.circe.generic.semiauto._
+
+    implicit val jsonCodec = deriveCodec[T]
+
+    deriveSpekkaCodec[T]
   }
 }
