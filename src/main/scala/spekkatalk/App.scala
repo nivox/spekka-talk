@@ -19,6 +19,7 @@ import spekka.codec.Encoder
 import spekka.context.FlowWithExtendedContext
 import spekka.context.Partition
 import spekka.context.PartitionTree
+import spekka.context.PartitionTree._
 import spekka.context.PartitionTree.PartitionControl.DynamicControl
 import spekka.context.PartitionTree.PartitionControl.StaticControl
 import spekka.stateful.AkkaPersistenceStatefulFlowBackend
@@ -39,7 +40,9 @@ import scala.concurrent.duration._
 
 case class AppEnv()
 
-object App extends AppSkeleton[AppEnv, NotUsed] {
+object App extends AppSkeleton[AppEnv] {
+
+  type M = NotUsed
 
   override val config: Config = ConfigFactory.load()
 

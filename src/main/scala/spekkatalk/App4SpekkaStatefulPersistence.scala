@@ -46,7 +46,10 @@ case class App4Env(
     ]
 )
 
-object App4SpekkaStatefulPersistence extends AppSkeleton[App4Env, NotUsed] {
+object App4SpekkaStatefulPersistence extends AppSkeleton[App4Env] {
+
+  type M = NotUsed
+
   val consumerGroup = "stateful-persistence"
 
   case class State(counter: Long)

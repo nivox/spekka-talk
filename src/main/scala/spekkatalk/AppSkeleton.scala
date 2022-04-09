@@ -27,7 +27,9 @@ import org.apache.kafka.common.TopicPartition
 import akka.kafka.RestrictedConsumer
 
 
-trait AppSkeleton[E, M] {
+trait AppSkeleton[E] {
+  type M
+
   val kafkaServer = Option(System.getenv("KAFKA_SERVER"))
     .getOrElse(throw new IllegalArgumentException("KAFKA_SERVER not specified"))
 

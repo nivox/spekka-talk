@@ -18,7 +18,10 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-object App2SpekkaContext extends AppSkeleton[NotUsed, StaticControl[String, CombinedMaterialization]] {
+object App2SpekkaContext extends AppSkeleton[NotUsed] {
+
+  type M = StaticControl[String, CombinedMaterialization]
+
   val consumerGroup = "context"
 
   override def init()(implicit system: ActorSystem): NotUsed = NotUsed

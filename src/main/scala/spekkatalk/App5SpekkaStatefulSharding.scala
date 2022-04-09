@@ -50,7 +50,10 @@ case class App5Env(
     ]
 )
 
-object App5SpekkaStatefulSharding extends AppSkeleton[App5Env, NotUsed] {
+object App5SpekkaStatefulSharding extends AppSkeleton[App5Env] {
+
+  type M = NotUsed
+
   val consumerGroup = "stateful-sharding"
 
   override val config: Config = {

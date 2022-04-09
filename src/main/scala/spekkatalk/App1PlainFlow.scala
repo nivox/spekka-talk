@@ -9,7 +9,8 @@ import spekkatalk.EntranceCounterReading
 import java.util.concurrent.atomic.AtomicLong
 import scala.concurrent.ExecutionContext
 
-object App1PlainFlow extends AppSkeleton[NotUsed, NotUsed] {
+object App1PlainFlow extends AppSkeleton[NotUsed] {
+  type M = NotUsed
 
   val consumerGroup = "plain"
 

@@ -42,7 +42,10 @@ case class App3Env(
     ]
 )
 
-object App3SpekkaStateful extends AppSkeleton[App3Env, NotUsed] {
+object App3SpekkaStateful extends AppSkeleton[App3Env] {
+
+  type M = NotUsed
+
   val consumerGroup = "stateful"
 
   case class State(counter: Long)
