@@ -34,9 +34,9 @@ footer: Andrea Zito
 ---
 #### Desired properties
 
-1. Resilient (recover failures)
-1. Scalable (adapt to the data amount)
-1. Complete
+* Resilient (recover failures)
+* Scalable (adapt to the data amount)
+* Complete
 
 ---
 #### Completeness
@@ -70,15 +70,6 @@ footer: Andrea Zito
 * Each entrance has a dedicated sensor
 * Edge service collect sensor's data and push to cloud
 * Multiple deployment
-
-```json
-{ 
-    "timestamp": 1640995200000, 
-    "deploymentId": "Carnegie Hall", 
-    "entranceId": 0, 
-    "counter": 1
-}
-```
 
 ---
 <!--header: Scenario -->
@@ -130,7 +121,6 @@ footer: Andrea Zito
 * Interacting (properly) with a flow is not easy...
 * ... almost impossible when using dynamic partitioning
 * Built-in partitioning does not guarantee at-least-once semantics
-* Common tasks often require a lot of non trivial code
 * No out of the box support for state persistence
 
 ---
@@ -231,6 +221,9 @@ footer: Andrea Zito
 * Changing storage layer has never been so 🥱
 * Still not scalable
 
+---
+<!-- header: Implementation: Spekka Stateful Akka Persistence -->
+
 #### Can we do better?
 
 ---
@@ -253,10 +246,13 @@ footer: Andrea Zito
 
 # Considerations
 
-* Well that was anticlimactic!
+* Well that was anticlimatic!
 * A couple of lines of code...
 * Some additional configuration
 * And our microservice is now clustered! 🤯
+
+---
+<!-- header: Implementation: Spekka Stateful Sharding -->
 
 #### Can we do better?
 
@@ -302,3 +298,4 @@ Developement of this library has been sponsored by
 - was the solution understandable by non Hakkers?
 - was the live-coding vs presentation balance good?
 - were you bored?
+- what can I cut to stay in 45 min without loosing people?
