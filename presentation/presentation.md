@@ -45,16 +45,9 @@ footer: Andrea Zito (@nivox)
 
 * Resilient (recover failures)
 * Scalable (adapt to data amount)
-* Complete & correct
+* Exaclty once semantic
 
 ---
-#### Completeness & correctness
-
-* Process all the data...
-* ... but not more than once
-
----
-
 #### Exactly once semantic
 
 * Exactly once is a lie 🍰
@@ -71,13 +64,13 @@ footer: Andrea Zito (@nivox)
 - API layer
 
 ---
-#### Interaction pattern
+#### Run loop
 
-1. read data + offset from Kafka
-1. process the data (keeping relationship to offset)
-1. produce outputs (side-effect!)
-1. persist state (if any)
-1. commit the offset
+* read data + context from durable queue
+* process the data (keeping relationship to context)
+* produce outputs (side-effect!)
+* persist state (if any)
+* mark the context as done
 
 ---
 <!-- header: Akka Stream -->
@@ -99,7 +92,7 @@ footer: Andrea Zito (@nivox)
 
 ## problem: one-to-one flows
 
-* Akka Stream `Flow` are too powerful:
+- Akka Stream `Flow` are too powerful:
   * can drop elements
   * can duplicate elements
   * can produce elements out of thin air
@@ -108,7 +101,7 @@ footer: Andrea Zito (@nivox)
 ---
 ## problem: one-to-one flows
 
-* Akka Stream provides `FlowWithContext`:
+- Akka Stream provides `FlowWithContext`:
   * solves the context modelling problem
   * but still allows to filter/duplicate elements
   * restrict usage of reordering operators (statefulMapConcat, groupBy)
@@ -117,9 +110,13 @@ footer: Andrea Zito (@nivox)
 <!-- header: FlowWithExtendedContext -->
 ### `FlowWithExtendedContext`
 
-* Spekka solution to one-to-one flows:
-  * strictly guarantees one-to-one semantic...
-  * ... while allowing reordering operators
+- Spekka solution to one-to-one flows:
+  * models flow with associated context
+  * strictly guarantees one-to-one semantic
+  * while allowing reordering operators
+
+---
+![w:1000](images/FlowWithExtendedContext.png)
 
 ---
 ##### The Big Superheroes Stream 🦸
@@ -278,19 +275,12 @@ ctx=7 movie=Deadpool            List(((Rayan Reynolds,Marvel),108))
  ```
 
 ---
-![w:640](images/FlowWithExtendedContext.png)
-
-* solves the one-to-one problem...
-* ... but still doesn't facilitate external interaction
-
----
 <!-- header: Stateful flows -->
 
-## problem: stateful flows interaction
+## problem: interaction
 
-* `Flow` and `FlowWithExtendedContext`:
-  * allows to define stateful computation
-  * do NOT provide easy way to interact with state
+there is no way to interact with a stateful flow
+
 
 ---
 #### Spekka's model for stateful flows
@@ -397,15 +387,19 @@ for {
 
 Interaction with the outside world => side effects
 
-* emitting to Kafka in response to stream inputs
-* doing *stuff* in response to commands
+---
+#### side effects
+
+- processing functions may specify side-effects:
+  * before the state is modified
+  * after the state is modified
 
 ---
 #### side effects
 
-* processing functions may specify side-effects:
-  * before the state is modified
-  * after the state is modified
+- processing functions may specify side-effects:
+  - before the state is modified
+  - after the state is modified
 
 ```scala
 StatefulFlowLogic.DurableState.ProcessingResult(
@@ -424,7 +418,7 @@ The state is still transient, we loose everything if our program restart!
 
 ---
 #### Spekka Stateful Akka Persistence Backend
-* persisted implementation of `StatefulFlowBackend` for:
+- persisted implementation of `StatefulFlowBackend` for:
   * Event based flows (`EventSourcedBehavior`)
   * Durable state flows (`DurableStateBehavor`)
 
@@ -458,8 +452,9 @@ durableLogic.propsForBackend(
 <!-- header: Sharded flows -->
 ## problem: scalable flows
 
-* our flow cannot scale!
-* the more movie with process... the more actor we learn about...
+* our flow do not scale!
+* the more movie with process... 
+* ... the more actor we learn about
 * at some point we will run out of memory! 
 
 ---
